@@ -1,0 +1,3 @@
+-keep class net.sqlcipher.** { *; }
+# Zachowaj klasy używane przez refleksję, JNI, API bibliotek
+# ...dodaj reguły dla innych bibliotek zgodnie z dokumentacją...

@@ -1,0 +1,171 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Aegis Messenger Backend API",
+    "version": "1.0.0",
+    "description": "Dokumentacja REST API dla backendu komunikatora Aegis Messenger."
+  },
+  "paths": {
+    "/api/keys": {
+      "post": {
+        "summary": "Publikacja pre-kluczy",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": { "type": "string" },
+                  "identityKey": { "type": "string" },
+                  "preKeys": { "type": "array", "items": { "type": "string" } },
+                  "signedPreKey": { "type": "string" }
+                },
+                "required": ["userId", "identityKey", "preKeys", "signedPreKey"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "OK" }
+        }
+      }
+    },
+    "/api/keys/{userId}": {
+      "get": {
+        "summary": "Pobieranie pre-kluczy",
+        "parameters": [
+          { "name": "userId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "OK" },
+          "404": { "description": "Not found" }
+        }
+      }
+    },
+    "/api/messages": {
+      "post": {
+        "summary": "Wysyłanie zaszyfrowanej wiadomości",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "receiverId": { "type": "string" },
+                  "sealedPayload": { "type": "string" }
+                },
+                "required": ["receiverId", "sealedPayload"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "OK" }
+        }
+      }
+    },
+    "/api/groups": {
+      "post": {
+        "summary": "Tworzenie grupy",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "groupId": { "type": "string" },
+                  "members": { "type": "array", "items": { "type": "string" } }
+                },
+                "required": ["groupId", "members"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "OK" }
+        }
+      }
+    },
+    "/api/groups/{groupId}": {
+      "get": {
+        "summary": "Pobieranie grupy",
+        "parameters": [
+          { "name": "groupId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "OK" },
+          "404": { "description": "Not found" }
+        }
+      }
+    },
+    "/api/files": {
+      "post": {
+        "summary": "Upload pliku",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "filename": { "type": "string" },
+                  "filedata": { "type": "string" }
+                },
+                "required": ["filename", "filedata"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "OK" }
+        }
+      }
+    },
+    "/api/files/{fileId}": {
+      "get": {
+        "summary": "Pobieranie pliku",
+        "parameters": [
+          { "name": "fileId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "OK" },
+          "404": { "description": "Not found" }
+        }
+      }
+    },
+    "/api/audit": {
+      "get": {
+        "summary": "Pobieranie logów audytowych (tylko admin)",
+        "responses": {
+          "200": { "description": "OK" },
+          "403": { "description": "Forbidden" }
+        }
+      }
+    },
+    "/api/sgx-attestation": {
+      "post": {
+        "summary": "Zdalna atestacja SGX",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "challenge": { "type": "string" }
+                },
+                "required": ["challenge"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "OK" }
+        }
+      }
+    }
+  }
+}
