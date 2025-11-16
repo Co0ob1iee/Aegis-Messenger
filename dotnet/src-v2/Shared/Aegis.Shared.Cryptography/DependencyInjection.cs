@@ -37,6 +37,11 @@ public static class DependencyInjection
 
     /// <summary>
     /// Add platform-specific key store implementation
+    /// Automatically selects the most secure storage available for the current platform:
+    /// - Windows: DPAPI (Data Protection API)
+    /// - Android: Android KeyStore System (hardware-backed when available)
+    /// - Linux: Linux KeyRing (libsecret/KWallet)
+    /// - Fallback: In-Memory (development only)
     /// </summary>
     private static IServiceCollection AddPlatformSpecificKeyStore(this IServiceCollection services)
     {
@@ -49,11 +54,40 @@ public static class DependencyInjection
                 return new WindowsDpapiKeyStore(logger);
             });
         }
+        else if (OperatingSystem.IsAndroid())
+        {
+            // Android: Use Android KeyStore System
+            // NOTE: Current implementation is simplified for cross-platform development
+            // For production, use AndroidX.Security.Crypto - see ANDROID_KEYSTORE_PRODUCTION.md
+            services.AddSingleton<IKeyStore>(sp =>
+            {
+                var logger = sp.GetRequiredService<ILogger<AndroidKeyStore>>();
+                return new AndroidKeyStore(logger);
+            });
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            // Linux: Use Linux KeyRing (libsecret/KWallet/Secret Service API)
+            // NOTE: Current implementation is file-based fallback
+            // For production, use libsecret or D-Bus Secret Service API - see LINUX_KEYRING_PRODUCTION.md
+            services.AddSingleton<IKeyStore>(sp =>
+            {
+                var logger = sp.GetRequiredService<ILogger<LinuxKeyRingStore>>();
+                return new LinuxKeyRingStore(logger);
+            });
+        }
         else
         {
             // Other platforms: Fall back to in-memory storage
-            // TODO: Implement Android KeyStore, Linux KeyRing, etc.
-            services.AddSingleton<IKeyStore, InMemoryKeyStore>();
+            // WARNING: In-memory storage is NOT SECURE and should only be used for development
+            services.AddSingleton<IKeyStore>(sp =>
+            {
+                var logger = sp.GetRequiredService<ILogger<InMemoryKeyStore>>();
+                logger.LogWarning(
+                    "Using InMemoryKeyStore - NOT SECURE FOR PRODUCTION. " +
+                    "Keys are not encrypted and will be lost on application restart.");
+                return new InMemoryKeyStore();
+            });
         }
 
         return services;
