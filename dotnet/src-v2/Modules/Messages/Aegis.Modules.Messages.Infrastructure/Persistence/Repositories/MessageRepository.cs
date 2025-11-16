@@ -66,8 +66,35 @@ public class MessageRepository : IMessageRepository
         _context.Messages.Update(message);
     }
 
+    public async Task UpdateAsync(Message message, CancellationToken cancellationToken = default)
+    {
+        _context.Messages.Update(message);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
     public void Delete(Message message)
     {
         _context.Messages.Remove(message);
+    }
+
+    public async Task DeleteAsync(Guid messageId, CancellationToken cancellationToken = default)
+    {
+        var message = await GetByIdAsync(messageId, cancellationToken);
+        if (message != null)
+        {
+            _context.Messages.Remove(message);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    public async Task<List<Message>> GetExpiredMessagesAsync(CancellationToken cancellationToken = default)
+    {
+        var now = DateTime.UtcNow;
+
+        return await _context.Messages
+            .Where(m => m.DisappearsAt.HasValue
+                && m.DisappearsAt.Value <= now
+                && !m.IsDeleted)
+            .ToListAsync(cancellationToken);
     }
 }

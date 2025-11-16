@@ -1,3 +1,4 @@
+using Aegis.Shared.Cryptography;
 using Aegis.Shared.Infrastructure.Caching;
 using Aegis.Shared.Infrastructure.EventBus;
 using Aegis.Shared.Infrastructure.Exceptions;
@@ -26,6 +27,9 @@ public static class DependencyInjection
         // Exception Handling
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
+
+        // Cryptography services
+        services.AddCryptographyServices();
 
         return services;
     }

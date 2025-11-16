@@ -1,4 +1,5 @@
 using Aegis.Modules.Users.Domain.Entities;
+using Aegis.Shared.Kernel.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -27,6 +28,21 @@ public class UserProfileConfiguration : IEntityTypeConfiguration<UserProfile>
             .HasConversion(
                 v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions)null!),
                 v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions)null!) ?? new List<Guid>());
+
+        // Privacy Settings - Owned Entity (stored as JSON)
+        builder.OwnsOne(p => p.PrivacySettings, privacy =>
+        {
+            privacy.Property(ps => ps.OnlineStatusVisibility).HasConversion<string>().HasMaxLength(20);
+            privacy.Property(ps => ps.LastSeenVisibility).HasConversion<string>().HasMaxLength(20);
+            privacy.Property(ps => ps.ProfilePictureVisibility).HasConversion<string>().HasMaxLength(20);
+            privacy.Property(ps => ps.BioVisibility).HasConversion<string>().HasMaxLength(20);
+            privacy.Property(ps => ps.SendReadReceipts);
+            privacy.Property(ps => ps.SendDeliveryReceipts);
+            privacy.Property(ps => ps.SendTypingIndicators);
+            privacy.Property(ps => ps.DefaultMessageExpiration);
+            privacy.Property(ps => ps.FuzzTimestamps);
+            privacy.Property(ps => ps.UseMessagePadding);
+        });
 
         builder.Ignore(p => p.DomainEvents);
         builder.Ignore(p => p.ContactIds);

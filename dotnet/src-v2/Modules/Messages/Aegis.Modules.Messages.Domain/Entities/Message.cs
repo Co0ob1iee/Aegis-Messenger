@@ -26,6 +26,11 @@ public class Message : AggregateRoot<Guid>
     public Guid? GroupId { get; private set; }
     public bool IsDeleted { get; private set; }
 
+    // Disappearing messages
+    public TimeSpan? DisappearDuration { get; private set; }
+    public DateTime? DisappearsAt { get; private set; }
+    public bool IsExpired => DisappearsAt.HasValue && DateTime.UtcNow >= DisappearsAt.Value;
+
     // EF Core constructor
     private Message() { }
 
@@ -65,7 +70,8 @@ public class Message : AggregateRoot<Guid>
         MessageType type = MessageType.Text,
         bool isGroupMessage = false,
         Guid? groupId = null,
-        Guid? replyToMessageId = null)
+        Guid? replyToMessageId = null,
+        TimeSpan? disappearDuration = null)
     {
         if (isGroupMessage && groupId == null)
         {
@@ -84,6 +90,14 @@ public class Message : AggregateRoot<Guid>
             isGroupMessage,
             groupId,
             replyToMessageId);
+
+        // Set disappearing message timer if specified
+        if (disappearDuration.HasValue)
+        {
+            var setResult = message.SetDisappearing(disappearDuration.Value);
+            if (setResult.IsFailure)
+                return Result.Failure<Message>(setResult.Error);
+        }
 
         // Raise domain event
         message.RaiseDomainEvent(new MessageSentEvent(
@@ -148,6 +162,9 @@ public class Message : AggregateRoot<Guid>
             DeliveredAt = DateTime.UtcNow;
         }
 
+        // Start disappearing message timer if configured
+        UpdateDisappearingTimer();
+
         // Raise domain event
         RaiseDomainEvent(new MessageReadEvent(
             Id,
@@ -173,5 +190,66 @@ public class Message : AggregateRoot<Guid>
     {
         IsDeleted = true;
         return Result.Success();
+    }
+
+    /// <summary>
+    /// Set disappearing message timer
+    /// Message will be deleted after specified duration from when it's read
+    /// </summary>
+    public Result SetDisappearing(TimeSpan duration)
+    {
+        // Supported durations
+        var supportedDurations = new[]
+        {
+            TimeSpan.FromSeconds(30),   // 30 seconds
+            TimeSpan.FromMinutes(1),    // 1 minute
+            TimeSpan.FromMinutes(5),    // 5 minutes
+            TimeSpan.FromMinutes(30),   // 30 minutes
+            TimeSpan.FromHours(1),      // 1 hour
+            TimeSpan.FromHours(8),      // 8 hours
+            TimeSpan.FromDays(1),       // 24 hours
+            TimeSpan.FromDays(7),       // 7 days
+        };
+
+        if (!supportedDurations.Contains(duration))
+        {
+            return Result.Failure(new Error(
+                "Message.InvalidDisappearDuration",
+                $"Duration must be one of: {string.Join(", ", supportedDurations.Select(d => d.TotalSeconds + "s"))}"));
+        }
+
+        DisappearDuration = duration;
+
+        // Calculate expiration time
+        // If message is already read, start timer now
+        // Otherwise, timer starts when message is read
+        if (ReadAt.HasValue)
+        {
+            DisappearsAt = ReadAt.Value + duration;
+        }
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Clear disappearing message timer
+    /// </summary>
+    public Result ClearDisappearing()
+    {
+        DisappearDuration = null;
+        DisappearsAt = null;
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Update expiration time when message is read
+    /// (for disappearing messages)
+    /// </summary>
+    private void UpdateDisappearingTimer()
+    {
+        if (DisappearDuration.HasValue && ReadAt.HasValue && !DisappearsAt.HasValue)
+        {
+            DisappearsAt = ReadAt.Value + DisappearDuration.Value;
+        }
     }
 }

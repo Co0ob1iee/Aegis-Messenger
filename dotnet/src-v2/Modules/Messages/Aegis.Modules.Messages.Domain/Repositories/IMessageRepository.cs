@@ -36,10 +36,20 @@ public interface IMessageRepository
     /// <summary>
     /// Update message
     /// </summary>
-    void Update(Message message);
+    Task UpdateAsync(Message message, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Delete message
+    /// Delete message (soft delete)
     /// </summary>
     void Delete(Message message);
+
+    /// <summary>
+    /// Delete message permanently (hard delete)
+    /// </summary>
+    Task DeleteAsync(Guid messageId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get expired disappearing messages
+    /// </summary>
+    Task<List<Message>> GetExpiredMessagesAsync(CancellationToken cancellationToken = default);
 }
