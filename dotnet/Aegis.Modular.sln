@@ -1,0 +1,117 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.0.0
+MinimumVisualStudioVersion = 10.0.40219.1
+
+# ==============================================================================
+# SHARED LIBRARIES
+# ==============================================================================
+
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Shared.Contracts", "src-v2\Shared\Aegis.Shared.Contracts\Aegis.Shared.Contracts.csproj", "{10000000-0000-0000-0000-000000000001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Shared.Cryptography", "src-v2\Shared\Aegis.Shared.Cryptography\Aegis.Shared.Cryptography.csproj", "{10000000-0000-0000-0000-000000000002}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Shared.Infrastructure", "src-v2\Shared\Aegis.Shared.Infrastructure\Aegis.Shared.Infrastructure.csproj", "{10000000-0000-0000-0000-000000000003}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Shared.Kernel", "src-v2\Shared\Aegis.Shared.Kernel\Aegis.Shared.Kernel.csproj", "{10000000-0000-0000-0000-000000000004}"
+EndProject
+
+# ==============================================================================
+# MODULE: AUTH
+# ==============================================================================
+
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Modules.Auth.Domain", "src-v2\Modules\Auth\Aegis.Modules.Auth.Domain\Aegis.Modules.Auth.Domain.csproj", "{20000000-0000-0000-0000-000000000001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Modules.Auth.Application", "src-v2\Modules\Auth\Aegis.Modules.Auth.Application\Aegis.Modules.Auth.Application.csproj", "{20000000-0000-0000-0000-000000000002}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Modules.Auth.Infrastructure", "src-v2\Modules\Auth\Aegis.Modules.Auth.Infrastructure\Aegis.Modules.Auth.Infrastructure.csproj", "{20000000-0000-0000-0000-000000000003}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Modules.Auth.API", "src-v2\Modules\Auth\Aegis.Modules.Auth.API\Aegis.Modules.Auth.API.csproj", "{20000000-0000-0000-0000-000000000004}"
+EndProject
+
+# ==============================================================================
+# MODULE: MESSAGES
+# ==============================================================================
+
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Modules.Messages.Domain", "src-v2\Modules\Messages\Aegis.Modules.Messages.Domain\Aegis.Modules.Messages.Domain.csproj", "{30000000-0000-0000-0000-000000000001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Modules.Messages.Application", "src-v2\Modules\Messages\Aegis.Modules.Messages.Application\Aegis.Modules.Messages.Application.csproj", "{30000000-0000-0000-0000-000000000002}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Modules.Messages.Infrastructure", "src-v2\Modules\Messages\Aegis.Modules.Messages.Infrastructure\Aegis.Modules.Messages.Infrastructure.csproj", "{30000000-0000-0000-0000-000000000003}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Modules.Messages.API", "src-v2\Modules\Messages\Aegis.Modules.Messages.API\Aegis.Modules.Messages.API.csproj", "{30000000-0000-0000-0000-000000000004}"
+EndProject
+
+# ==============================================================================
+# MODULE: USERS
+# ==============================================================================
+
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Modules.Users.Domain", "src-v2\Modules\Users\Aegis.Modules.Users.Domain\Aegis.Modules.Users.Domain.csproj", "{40000000-0000-0000-0000-000000000001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Modules.Users.Application", "src-v2\Modules\Users\Aegis.Modules.Users.Application\Aegis.Modules.Users.Application.csproj", "{40000000-0000-0000-0000-000000000002}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Modules.Users.Infrastructure", "src-v2\Modules\Users\Aegis.Modules.Users.Infrastructure\Aegis.Modules.Users.Infrastructure.csproj", "{40000000-0000-0000-0000-000000000003}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Modules.Users.API", "src-v2\Modules\Users\Aegis.Modules.Users.API\Aegis.Modules.Users.API.csproj", "{40000000-0000-0000-0000-000000000004}"
+EndProject
+
+# ==============================================================================
+# MODULE: GROUPS
+# ==============================================================================
+
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Modules.Groups.Domain", "src-v2\Modules\Groups\Aegis.Modules.Groups.Domain\Aegis.Modules.Groups.Domain.csproj", "{50000000-0000-0000-0000-000000000001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Modules.Groups.Application", "src-v2\Modules\Groups\Aegis.Modules.Groups.Application\Aegis.Modules.Groups.Application.csproj", "{50000000-0000-0000-0000-000000000002}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Modules.Groups.Infrastructure", "src-v2\Modules\Groups\Aegis.Modules.Groups.Infrastructure\Aegis.Modules.Groups.Infrastructure.csproj", "{50000000-0000-0000-0000-000000000003}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Modules.Groups.API", "src-v2\Modules\Groups\Aegis.Modules.Groups.API\Aegis.Modules.Groups.API.csproj", "{50000000-0000-0000-0000-000000000004}"
+EndProject
+
+# ==============================================================================
+# MODULE: FILES
+# ==============================================================================
+
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Modules.Files.Domain", "src-v2\Modules\Files\Aegis.Modules.Files.Domain\Aegis.Modules.Files.Domain.csproj", "{60000000-0000-0000-0000-000000000001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Modules.Files.Application", "src-v2\Modules\Files\Aegis.Modules.Files.Application\Aegis.Modules.Files.Application.csproj", "{60000000-0000-0000-0000-000000000002}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Modules.Files.Infrastructure", "src-v2\Modules\Files\Aegis.Modules.Files.Infrastructure\Aegis.Modules.Files.Infrastructure.csproj", "{60000000-0000-0000-0000-000000000003}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Modules.Files.API", "src-v2\Modules\Files\Aegis.Modules.Files.API\Aegis.Modules.Files.API.csproj", "{60000000-0000-0000-0000-000000000004}"
+EndProject
+
+# ==============================================================================
+# HOST
+# ==============================================================================
+
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Host.API", "src-v2\Host\Aegis.Host.API\Aegis.Host.API.csproj", "{70000000-0000-0000-0000-000000000001}"
+EndProject
+
+# ==============================================================================
+# CLIENTS
+# ==============================================================================
+
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Clients.Shared", "src-v2\Clients\Aegis.Clients.Shared\Aegis.Clients.Shared.csproj", "{80000000-0000-0000-0000-000000000001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Clients.Desktop", "src-v2\Clients\Aegis.Clients.Desktop\Aegis.Clients.Desktop.csproj", "{80000000-0000-0000-0000-000000000002}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aegis.Clients.Android", "src-v2\Clients\Aegis.Clients.Android\Aegis.Clients.Android.csproj", "{80000000-0000-0000-0000-000000000003}"
+EndProject
+
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{10000000-0000-0000-0000-000000000001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10000000-0000-0000-0000-000000000001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10000000-0000-0000-0000-000000000001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10000000-0000-0000-0000-000000000001}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
