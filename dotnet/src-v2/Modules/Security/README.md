@@ -2,7 +2,8 @@
 
 Kompletny moduł bezpieczeństwa dla Aegis Messenger, zapewniający:
 - **Security Audit Logging** - kompletny audit trail wszystkich zdarzeń
-- **Rate Limiting** - ochrona przed abuse i brute force
+- **Rate Limiting** - ochrona przed abuse i brute force (in-memory + Redis distributed)
+- **Email/Webhook Alerting** - automatyczne powiadomienia dla Critical events
 - **Windows DPAPI Key Storage** - bezpieczne przechowywanie kluczy
 - **Automatic Middleware** - automatyczne logowanie i rate limiting dla HTTP requests
 - **Domain Event Handlers** - automatyczne logowanie domain events
@@ -19,17 +20,25 @@ Security/
 │   │   └── SecurityEventSeverity.cs (5 poziomów)
 │   └── Repositories/
 │       └── ISecurityAuditRepository.cs
-├── Application/         # Serwisy, event handlers
+├── Application/         # Serwisy, event handlers, alerting
 │   ├── Services/
 │   │   ├── ISecurityAuditService.cs
 │   │   └── SecurityAuditService.cs
+│   ├── Alerting/
+│   │   ├── IAlertingService.cs
+│   │   ├── SecurityAlert.cs
+│   │   └── AlertingOptions.cs
 │   └── EventHandlers/
 │       └── DomainEventAuditHandler.cs
-├── Infrastructure/      # Persistence, DbContext
+├── Infrastructure/      # Persistence, DbContext, alerting implementation
 │   ├── Persistence/
 │   │   ├── SecurityDbContext.cs
 │   │   ├── Configurations/
 │   │   └── Repositories/
+│   ├── Alerting/
+│   │   ├── EmailAlertingService.cs (MailKit/SMTP)
+│   │   ├── WebhookAlertingService.cs (Slack/Discord/Teams/Generic)
+│   │   └── CompositeAlertingService.cs
 │   └── DependencyInjection.cs
 └── API/                 # Controllers, middleware, services
     ├── Middleware/
@@ -248,7 +257,122 @@ Automatyczne logowanie domain events do audit log:
 - ✅ Kompletny audit trail - wszystkie domain events logowane
 - ✅ Łatwa konfiguracja - dodaj nowy handler dla nowego eventu
 
-### 5. Helper Extensions
+### 5. Email/Webhook Alerting
+
+Automatyczne powiadomienia dla zdarzeń Critical i High severity poprzez email i webhooks.
+
+**Kiedy wysyłane są alerty:**
+- Zdarzenia z severity **High** lub **Critical**
+- Nieudane próby z severity **Medium** lub wyższym
+- Automatycznie wywołane przez `SecurityAuditService.LogSuccessAsync()` / `LogFailureAsync()`
+
+**Obsługiwane kanały:**
+
+**Email (via MailKit/SMTP):**
+- Profesjonalne HTML i text wersje emaili
+- Kolory zależne od severity (Critical=Red, High=Orange, etc.)
+- Wszystkie szczegóły zdarzenia w czytelnym formacie
+- Automatyczne retry przy błędach SMTP
+
+**Webhooks:**
+- **Slack** - formatted attachments z polami i kolorami
+- **Discord** - rich embeds z kolorami i ikonami
+- **Microsoft Teams** - MessageCard format
+- **Generic** - czysty JSON dla custom endpoints
+- Retry logic z exponential backoff (3 próby)
+- Configurable timeout i custom headers
+
+**Konfiguracja w appsettings.json:**
+
+```json
+{
+  "Security": {
+    "Alerting": {
+      "Enabled": true,
+      "Email": {
+        "Enabled": true,
+        "SmtpServer": "smtp.gmail.com",
+        "SmtpPort": 587,
+        "UseSsl": true,
+        "Username": "your-email@gmail.com",
+        "Password": "your-app-password",
+        "FromAddress": "security@aegismessenger.com",
+        "FromName": "Aegis Messenger Security",
+        "ToAddresses": [
+          "admin@example.com",
+          "security-team@example.com"
+        ]
+      },
+      "Webhooks": [
+        {
+          "Name": "Slack Production",
+          "Url": "https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
+          "Type": "Slack",
+          "Headers": {},
+          "TimeoutSeconds": 10,
+          "MaxRetries": 3
+        },
+        {
+          "Name": "Discord Security",
+          "Url": "https://discord.com/api/webhooks/YOUR/WEBHOOK",
+          "Type": "Discord",
+          "Headers": {},
+          "TimeoutSeconds": 10,
+          "MaxRetries": 3
+        },
+        {
+          "Name": "Custom Endpoint",
+          "Url": "https://your-api.com/security-alerts",
+          "Type": "Generic",
+          "Headers": {
+            "Authorization": "Bearer YOUR_TOKEN",
+            "X-Custom-Header": "value"
+          },
+          "TimeoutSeconds": 5,
+          "MaxRetries": 2
+        }
+      ]
+    }
+  }
+}
+```
+
+**Email Setup (Gmail example):**
+1. Włącz 2-Factor Authentication w Gmail
+2. Wygeneruj App Password: https://myaccount.google.com/apppasswords
+3. Użyj App Password jako `Password` w konfiguracji
+
+**Slack Webhook Setup:**
+1. Wejdź do Slack App Directory → Incoming Webhooks
+2. Wybierz kanał i utwórz webhook
+3. Skopiuj webhook URL do konfiguracji
+
+**Discord Webhook Setup:**
+1. Server Settings → Integrations → Webhooks
+2. Create Webhook i wybierz kanał
+3. Copy Webhook URL
+
+**Microsoft Teams Webhook Setup:**
+1. Teams channel → Connectors → Incoming Webhook
+2. Configure i skopiuj URL
+3. Ustaw `Type: "MicrosoftTeams"`
+
+**Fire-and-Forget Delivery:**
+Alerty są wysyłane asynchronicznie (Task.Run) aby nie blokować request pipeline:
+- Błędy wysyłania są logowane ale nie przerywają requestu
+- Retry logic automatycznie powtarza przy przejściowych błędach
+- Fail-safe - aplikacja działa nawet gdy alerting nie działa
+
+**Przykładowe zdarzenia generujące alerty:**
+- ❌ Failed login attempts (High severity)
+- 🔑 Password changed (Critical severity)
+- 🔐 Key rotation (Critical severity)
+- 🗑️ Account deleted (Critical severity)
+- ⚠️ Rate limit exceeded (Medium severity - tylko przy failure)
+- 🚨 Suspicious activity detected (Critical severity)
+- 🚫 Unauthorized access attempts (High severity)
+
+### 6. Helper Extensions
 
 **HttpContextSecurityExtensions** - łatwy dostęp do informacji o requestcie:
 
@@ -295,7 +419,7 @@ public class MessagesController : ControllerBase
 }
 ```
 
-### 6. Queries - Przeglądanie Audit Logs
+### 7. Queries - Przeglądanie Audit Logs
 
 **ISecurityAuditRepository** zapewnia wydajne queries:
 

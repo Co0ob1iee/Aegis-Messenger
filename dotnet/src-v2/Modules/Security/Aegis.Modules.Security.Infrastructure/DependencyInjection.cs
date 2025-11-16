@@ -1,4 +1,6 @@
+using Aegis.Modules.Security.Application.Alerting;
 using Aegis.Modules.Security.Domain.Repositories;
+using Aegis.Modules.Security.Infrastructure.Alerting;
 using Aegis.Modules.Security.Infrastructure.Persistence;
 using Aegis.Modules.Security.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +24,15 @@ public static class DependencyInjection
 
         // Repositories
         services.AddScoped<ISecurityAuditRepository, SecurityAuditRepository>();
+
+        // Alerting
+        services.Configure<AlertingOptions>(
+            configuration.GetSection(AlertingOptions.SectionName));
+
+        services.AddHttpClient("SecurityAlerting");
+        services.AddSingleton<EmailAlertingService>();
+        services.AddSingleton<WebhookAlertingService>();
+        services.AddSingleton<IAlertingService, CompositeAlertingService>();
 
         return services;
     }
