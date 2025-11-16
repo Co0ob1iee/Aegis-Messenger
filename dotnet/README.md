@@ -517,6 +517,19 @@ dotnet test tests/Aegis.Backend.Tests/
 
 ### 📖 Dokumentacja Rozwoju
 
+- **[Modular Architecture](docs/MODULAR_ARCHITECTURE.md)** ⭐ **NEW!** - Enterprise-grade wielomodułowa architektura
+  - Domain-Driven Design (DDD)
+  - Clean Architecture
+  - SOLID principles
+  - Modular Monolith → Microservices ready
+  - 28 projektów w nowej strukturze (`src-v2/`)
+
+- **[Implementation Guide](docs/IMPLEMENTATION_GUIDE.md)** ⭐ **NEW!** - Przewodnik implementacji
+  - Plan migracji (7 tygodni)
+  - Przykłady kodu dla każdego modułu
+  - Testing strategies
+  - Timeline i milestones
+
 - **[Development Roadmap](DEVELOPMENT_ROADMAP.md)** - Szczegółowy plan rozwoju projektu
   - Fazy rozwoju (1-4)
   - Nowe funkcjonalności (Disappearing messages, Voice/Video calls, etc.)
