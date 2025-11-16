@@ -14,6 +14,17 @@ public class SecurityAuditRepository : ISecurityAuditRepository
         _context = context;
     }
 
+    public IQueryable<SecurityAuditLog> GetQueryable()
+    {
+        return _context.SecurityAuditLogs.AsQueryable();
+    }
+
+    public async Task<SecurityAuditLog?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _context.SecurityAuditLogs
+            .FirstOrDefaultAsync(log => log.Id == id, cancellationToken);
+    }
+
     public async Task<SecurityAuditLog> AddAsync(SecurityAuditLog log, CancellationToken cancellationToken = default)
     {
         await _context.SecurityAuditLogs.AddAsync(log, cancellationToken);
