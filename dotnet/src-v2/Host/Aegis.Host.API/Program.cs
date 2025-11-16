@@ -4,6 +4,7 @@ using Aegis.Modules.Users.API;
 using Aegis.Modules.Groups.API;
 using Aegis.Modules.Files.API;
 using Aegis.Modules.Security.API;
+using Aegis.Modules.Security.API.Middleware;
 using Aegis.Shared.Infrastructure;
 using Serilog;
 
@@ -97,6 +98,10 @@ try
 
     app.UseHttpsRedirection();
     app.UseCors();
+
+    // Security middleware - MUST be before authentication
+    app.UseSecurityAudit();    // Log all requests
+    app.UseRateLimiting();     // Check rate limits
 
     app.UseAuthentication();
     app.UseAuthorization();

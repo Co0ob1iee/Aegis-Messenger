@@ -1,5 +1,5 @@
 using Aegis.Modules.Security.API.Services;
-using Aegis.Modules.Security.Application.Services;
+using Aegis.Modules.Security.Application;
 using Aegis.Modules.Security.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,8 +15,8 @@ public static class DependencyInjection
         // Infrastructure
         services.AddSecurityInfrastructure(configuration);
 
-        // Application services
-        services.AddScoped<ISecurityAuditService, SecurityAuditService>();
+        // Application layer (includes event handlers)
+        services.AddSecurityApplication();
 
         // API services
         services.AddSingleton<IRateLimitingService, RateLimitingService>();

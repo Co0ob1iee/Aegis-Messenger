@@ -9,10 +9,12 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+    <PackageReference Include="MediatR" Version="12.2.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Aegis.Modules.Security.Domain\Aegis.Modules.Security.Domain.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Aegis.Shared.Contracts\Aegis.Shared.Contracts.csproj" />
   </ItemGroup>
 
 </Project>
