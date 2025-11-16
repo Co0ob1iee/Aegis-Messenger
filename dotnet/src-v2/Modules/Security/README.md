@@ -37,7 +37,8 @@ Security/
     │   └── SecurityAuditMiddleware.cs
     ├── Services/
     │   ├── IRateLimitingService.cs
-    │   └── RateLimitingService.cs
+    │   ├── RateLimitingService.cs (in-memory)
+    │   └── RedisRateLimitingService.cs (distributed)
     ├── Extensions/
     │   ├── HttpContextSecurityExtensions.cs
     │   └── ControllerBaseSecurityExtensions.cs
@@ -102,7 +103,11 @@ var hasExcessiveFailures = await _auditService.HasExcessiveFailedLoginsAsync(
 
 ### 2. Rate Limiting
 
-Automatyczna ochrona przed abuse z predefiniowanymi limitami:
+Automatyczna ochrona przed abuse z predefiniowanymi limitami. Obsługuje dwie implementacje:
+
+**Implementacje:**
+- **In-Memory** - prosty, szybki, dla single-instance deployments
+- **Redis** - distributed, atomiczny, dla multi-instance deployments (klastry, load balancing)
 
 **13 Operacji:**
 ```csharp
@@ -122,6 +127,30 @@ default:            30 requests / 5 minutes
 ```
 
 **Algorytm:** Sliding Window - precyzyjne limitowanie w czasie
+
+**Konfiguracja Redis (opcjonalna):**
+
+Aby włączyć distributed rate limiting z Redis, dodaj connection string w `appsettings.json`:
+
+```json
+{
+  "ConnectionStrings": {
+    "Redis": "localhost:6379,abortConnect=false,connectTimeout=5000,syncTimeout=5000"
+  }
+}
+```
+
+**Automatyczny fallback:**
+- Jeśli Redis jest skonfigurowany → używa `RedisRateLimitingService`
+- Jeśli połączenie się nie powiedzie → fallback do in-memory
+- Jeśli Redis nie jest skonfigurowany → używa in-memory
+
+**Redis Implementation Details:**
+- Używa **Lua scripts** dla atomicznych operacji (brak race conditions)
+- **Sorted Sets (ZSET)** do przechowywania timestampów
+- Automatyczne **expiration** starych wpisów
+- **Fail-open** strategy - zezwala na requesty gdy Redis jest niedostępny
+- Format kluczy: `ratelimit:{operation}:{key}`
 
 **Przykład użycia:**
 
