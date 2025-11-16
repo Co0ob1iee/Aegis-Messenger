@@ -1,7 +1,10 @@
+using System.Runtime.InteropServices;
 using Aegis.Shared.Cryptography.Interfaces;
 using Aegis.Shared.Cryptography.Services;
 using Aegis.Shared.Cryptography.SignalProtocol;
+using Aegis.Shared.Cryptography.Storage;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Aegis.Shared.Cryptography;
 
@@ -26,8 +29,32 @@ public static class DependencyInjection
         services.AddSingleton<IMessagePaddingService, MessagePaddingService>();
         services.AddSingleton<ITimestampFuzzingService, TimestampFuzzingService>();
 
-        // Note: IKeyStore needs platform-specific implementation
-        // Register in platform-specific projects (e.g., Windows DPAPI, Android KeyStore)
+        // Platform-specific key storage
+        services.AddPlatformSpecificKeyStore();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Add platform-specific key store implementation
+    /// </summary>
+    private static IServiceCollection AddPlatformSpecificKeyStore(this IServiceCollection services)
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            // Windows: Use DPAPI for secure key storage
+            services.AddSingleton<IKeyStore>(sp =>
+            {
+                var logger = sp.GetRequiredService<ILogger<WindowsDpapiKeyStore>>();
+                return new WindowsDpapiKeyStore(logger);
+            });
+        }
+        else
+        {
+            // Other platforms: Fall back to in-memory storage
+            // TODO: Implement Android KeyStore, Linux KeyRing, etc.
+            services.AddSingleton<IKeyStore, InMemoryKeyStore>();
+        }
 
         return services;
     }

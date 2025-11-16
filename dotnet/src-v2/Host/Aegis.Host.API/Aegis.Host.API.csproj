@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Modules\Security\Aegis.Modules.Security.API\Aegis.Modules.Security.API.csproj" />
     <ProjectReference Include="..\..\Modules\Auth\Aegis.Modules.Auth.API\Aegis.Modules.Auth.API.csproj" />
     <ProjectReference Include="..\..\Modules\Messages\Aegis.Modules.Messages.API\Aegis.Modules.Messages.API.csproj" />
     <ProjectReference Include="..\..\Modules\Users\Aegis.Modules.Users.API\Aegis.Modules.Users.API.csproj" />

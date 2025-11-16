@@ -3,6 +3,7 @@ using Aegis.Modules.Messages.API;
 using Aegis.Modules.Users.API;
 using Aegis.Modules.Groups.API;
 using Aegis.Modules.Files.API;
+using Aegis.Modules.Security.API;
 using Aegis.Shared.Infrastructure;
 using Serilog;
 
@@ -75,6 +76,7 @@ try
     builder.Services.AddSharedInfrastructure();
 
     // Modules
+    builder.Services.AddSecurityModule(builder.Configuration);  // Security first
     builder.Services.AddAuthModule(builder.Configuration);
     builder.Services.AddMessagesModule(builder.Configuration);
     builder.Services.AddUsersModule(builder.Configuration);
