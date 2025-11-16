@@ -1,10 +1,12 @@
+using Aegis.Shared.Kernel.Interfaces;
+
 namespace Aegis.Shared.Kernel.Primitives;
 
 /// <summary>
 /// Base class for all entities with strongly-typed ID
 /// </summary>
 /// <typeparam name="TId">Type of the entity identifier</typeparam>
-public abstract class Entity<TId> : IEquatable<Entity<TId>>
+public abstract class Entity<TId> : IEntity<TId>, IEquatable<Entity<TId>>
     where TId : notnull
 {
     private readonly List<IDomainEvent> _domainEvents = new();
