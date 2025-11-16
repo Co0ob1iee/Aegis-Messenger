@@ -1,3 +1,4 @@
+using Aegis.Modules.Security.Application.Alerting;
 using Aegis.Modules.Security.Domain.Entities;
 using Aegis.Modules.Security.Domain.Enums;
 using Aegis.Modules.Security.Domain.Repositories;
@@ -11,6 +12,7 @@ namespace Aegis.Modules.Security.Application.Services;
 public class SecurityAuditService : ISecurityAuditService
 {
     private readonly ISecurityAuditRepository _repository;
+    private readonly IAlertingService _alertingService;
     private readonly ILogger<SecurityAuditService> _logger;
 
     // Thresholds for security alerts
@@ -19,9 +21,11 @@ public class SecurityAuditService : ISecurityAuditService
 
     public SecurityAuditService(
         ISecurityAuditRepository repository,
+        IAlertingService alertingService,
         ILogger<SecurityAuditService> logger)
     {
         _repository = repository;
+        _alertingService = alertingService;
         _logger = logger;
     }
 
@@ -52,13 +56,27 @@ public class SecurityAuditService : ISecurityAuditService
             userId,
             ipAddress);
 
-        // Check if we should alert
-        if (auditLog.ShouldAlert())
+        // Check if we should alert and send notifications
+        if (auditLog.ShouldAlert() && _alertingService.IsEnabled())
         {
             _logger.LogWarning(
                 "SECURITY ALERT: {EventType} - {Details}",
                 eventType,
                 details ?? "No details");
+
+            // Send alert asynchronously (fire and forget to not block request)
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var alert = SecurityAlert.FromAuditLog(auditLog);
+                    await _alertingService.SendAlertAsync(alert, CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send security alert for event {EventType}", eventType);
+                }
+            }, cancellationToken);
         }
     }
 
@@ -92,13 +110,27 @@ public class SecurityAuditService : ISecurityAuditService
             ipAddress,
             errorMessage);
 
-        // Check if we should alert
-        if (auditLog.ShouldAlert())
+        // Check if we should alert and send notifications
+        if (auditLog.ShouldAlert() && _alertingService.IsEnabled())
         {
             _logger.LogError(
                 "SECURITY ALERT: {EventType} - {Error}",
                 eventType,
                 errorMessage);
+
+            // Send alert asynchronously (fire and forget to not block request)
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var alert = SecurityAlert.FromAuditLog(auditLog);
+                    await _alertingService.SendAlertAsync(alert, CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send security alert for event {EventType}", eventType);
+                }
+            }, cancellationToken);
         }
 
         // Check for brute force attacks

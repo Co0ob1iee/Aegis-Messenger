@@ -9,6 +9,16 @@ namespace Aegis.Modules.Security.Domain.Repositories;
 public interface ISecurityAuditRepository
 {
     /// <summary>
+    /// Get queryable for advanced filtering
+    /// </summary>
+    IQueryable<SecurityAuditLog> GetQueryable();
+
+    /// <summary>
+    /// Get audit log by ID
+    /// </summary>
+    Task<SecurityAuditLog?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Add new audit log entry
     /// </summary>
     Task<SecurityAuditLog> AddAsync(SecurityAuditLog log, CancellationToken cancellationToken = default);

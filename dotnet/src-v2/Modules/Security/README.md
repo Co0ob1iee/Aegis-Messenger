@@ -2,7 +2,8 @@
 
 Kompletny moduł bezpieczeństwa dla Aegis Messenger, zapewniający:
 - **Security Audit Logging** - kompletny audit trail wszystkich zdarzeń
-- **Rate Limiting** - ochrona przed abuse i brute force
+- **Rate Limiting** - ochrona przed abuse i brute force (in-memory + Redis distributed)
+- **Email/Webhook Alerting** - automatyczne powiadomienia dla Critical events
 - **Windows DPAPI Key Storage** - bezpieczne przechowywanie kluczy
 - **Automatic Middleware** - automatyczne logowanie i rate limiting dla HTTP requests
 - **Domain Event Handlers** - automatyczne logowanie domain events
@@ -19,17 +20,25 @@ Security/
 │   │   └── SecurityEventSeverity.cs (5 poziomów)
 │   └── Repositories/
 │       └── ISecurityAuditRepository.cs
-├── Application/         # Serwisy, event handlers
+├── Application/         # Serwisy, event handlers, alerting
 │   ├── Services/
 │   │   ├── ISecurityAuditService.cs
 │   │   └── SecurityAuditService.cs
+│   ├── Alerting/
+│   │   ├── IAlertingService.cs
+│   │   ├── SecurityAlert.cs
+│   │   └── AlertingOptions.cs
 │   └── EventHandlers/
 │       └── DomainEventAuditHandler.cs
-├── Infrastructure/      # Persistence, DbContext
+├── Infrastructure/      # Persistence, DbContext, alerting implementation
 │   ├── Persistence/
 │   │   ├── SecurityDbContext.cs
 │   │   ├── Configurations/
 │   │   └── Repositories/
+│   ├── Alerting/
+│   │   ├── EmailAlertingService.cs (MailKit/SMTP)
+│   │   ├── WebhookAlertingService.cs (Slack/Discord/Teams/Generic)
+│   │   └── CompositeAlertingService.cs
 │   └── DependencyInjection.cs
 └── API/                 # Controllers, middleware, services
     ├── Middleware/
@@ -248,7 +257,312 @@ Automatyczne logowanie domain events do audit log:
 - ✅ Kompletny audit trail - wszystkie domain events logowane
 - ✅ Łatwa konfiguracja - dodaj nowy handler dla nowego eventu
 
-### 5. Helper Extensions
+### 5. Email/Webhook Alerting
+
+Automatyczne powiadomienia dla zdarzeń Critical i High severity poprzez email i webhooks.
+
+**Kiedy wysyłane są alerty:**
+- Zdarzenia z severity **High** lub **Critical**
+- Nieudane próby z severity **Medium** lub wyższym
+- Automatycznie wywołane przez `SecurityAuditService.LogSuccessAsync()` / `LogFailureAsync()`
+
+**Obsługiwane kanały:**
+
+**Email (via MailKit/SMTP):**
+- Profesjonalne HTML i text wersje emaili
+- Kolory zależne od severity (Critical=Red, High=Orange, etc.)
+- Wszystkie szczegóły zdarzenia w czytelnym formacie
+- Automatyczne retry przy błędach SMTP
+
+**Webhooks:**
+- **Slack** - formatted attachments z polami i kolorami
+- **Discord** - rich embeds z kolorami i ikonami
+- **Microsoft Teams** - MessageCard format
+- **Generic** - czysty JSON dla custom endpoints
+- Retry logic z exponential backoff (3 próby)
+- Configurable timeout i custom headers
+
+**Konfiguracja w appsettings.json:**
+
+```json
+{
+  "Security": {
+    "Alerting": {
+      "Enabled": true,
+      "Email": {
+        "Enabled": true,
+        "SmtpServer": "smtp.gmail.com",
+        "SmtpPort": 587,
+        "UseSsl": true,
+        "Username": "your-email@gmail.com",
+        "Password": "your-app-password",
+        "FromAddress": "security@aegismessenger.com",
+        "FromName": "Aegis Messenger Security",
+        "ToAddresses": [
+          "admin@example.com",
+          "security-team@example.com"
+        ]
+      },
+      "Webhooks": [
+        {
+          "Name": "Slack Production",
+          "Url": "https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
+          "Type": "Slack",
+          "Headers": {},
+          "TimeoutSeconds": 10,
+          "MaxRetries": 3
+        },
+        {
+          "Name": "Discord Security",
+          "Url": "https://discord.com/api/webhooks/YOUR/WEBHOOK",
+          "Type": "Discord",
+          "Headers": {},
+          "TimeoutSeconds": 10,
+          "MaxRetries": 3
+        },
+        {
+          "Name": "Custom Endpoint",
+          "Url": "https://your-api.com/security-alerts",
+          "Type": "Generic",
+          "Headers": {
+            "Authorization": "Bearer YOUR_TOKEN",
+            "X-Custom-Header": "value"
+          },
+          "TimeoutSeconds": 5,
+          "MaxRetries": 2
+        }
+      ]
+    }
+  }
+}
+```
+
+**Email Setup (Gmail example):**
+1. Włącz 2-Factor Authentication w Gmail
+2. Wygeneruj App Password: https://myaccount.google.com/apppasswords
+3. Użyj App Password jako `Password` w konfiguracji
+
+**Slack Webhook Setup:**
+1. Wejdź do Slack App Directory → Incoming Webhooks
+2. Wybierz kanał i utwórz webhook
+3. Skopiuj webhook URL do konfiguracji
+
+**Discord Webhook Setup:**
+1. Server Settings → Integrations → Webhooks
+2. Create Webhook i wybierz kanał
+3. Copy Webhook URL
+
+**Microsoft Teams Webhook Setup:**
+1. Teams channel → Connectors → Incoming Webhook
+2. Configure i skopiuj URL
+3. Ustaw `Type: "MicrosoftTeams"`
+
+**Fire-and-Forget Delivery:**
+Alerty są wysyłane asynchronicznie (Task.Run) aby nie blokować request pipeline:
+- Błędy wysyłania są logowane ale nie przerywają requestu
+- Retry logic automatycznie powtarza przy przejściowych błędach
+- Fail-safe - aplikacja działa nawet gdy alerting nie działa
+
+**Przykładowe zdarzenia generujące alerty:**
+- ❌ Failed login attempts (High severity)
+- 🔑 Password changed (Critical severity)
+- 🔐 Key rotation (Critical severity)
+- 🗑️ Account deleted (Critical severity)
+- ⚠️ Rate limit exceeded (Medium severity - tylko przy failure)
+- 🚨 Suspicious activity detected (Critical severity)
+- 🚫 Unauthorized access attempts (High severity)
+
+### 6. Admin Dashboard API
+
+Kompletne REST API do przeglądania audit logs przez administratorów.
+
+**Authorization:** Wszystkie endpointy wymagają roli `Admin`
+
+**Dostępne endpointy:**
+
+#### GET `/api/admin/security/audit-logs`
+Pobiera stronicowane audit logs z zaawansowanym filtrowaniem.
+
+**Query Parameters:**
+- `pageNumber` (int, default: 1) - numer strony
+- `pageSize` (int, default: 50, max: 200) - rozmiar strony
+- `userId` (guid?) - filtruj po user ID
+- `ipAddress` (string?) - filtruj po IP address
+- `eventType` (SecurityEventType?) - filtruj po typie eventu
+- `severity` (SecurityEventSeverity?) - filtruj po severity
+- `isSuccessful` (bool?) - filtruj po statusie (success/failure)
+- `from` (datetime?) - od kiedy
+- `to` (datetime?) - do kiedy
+- `sortBy` (string, default: "Timestamp") - kolumna sortowania
+- `sortDescending` (bool, default: true) - kierunek sortowania
+
+**Response:** `PagedResult<SecurityAuditLogDto>`
+```json
+{
+  "items": [
+    {
+      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "eventType": "LoginFailed",
+      "severity": "High",
+      "timestamp": "2025-11-16T14:30:00Z",
+      "isSuccessful": false,
+      "userId": "abc123...",
+      "username": "john.doe",
+      "ipAddress": "192.168.1.100",
+      "userAgent": "Mozilla/5.0...",
+      "errorMessage": "Invalid credentials",
+      "details": "Login attempt from suspicious location"
+    }
+  ],
+  "totalCount": 1250,
+  "pageNumber": 1,
+  "pageSize": 50,
+  "totalPages": 25,
+  "hasPreviousPage": false,
+  "hasNextPage": true
+}
+```
+
+**Przykład użycia:**
+```bash
+# Wszystkie failed login attempts z ostatnich 24h
+curl -H "Authorization: Bearer {token}" \
+  "https://api.aegis.com/api/admin/security/audit-logs?eventType=LoginFailed&from=2025-11-15T14:00:00Z&pageSize=100"
+
+# Critical events dla konkretnego użytkownika
+curl -H "Authorization: Bearer {token}" \
+  "https://api.aegis.com/api/admin/security/audit-logs?userId=abc123&severity=Critical"
+
+# Wszystkie failures z konkretnego IP
+curl -H "Authorization: Bearer {token}" \
+  "https://api.aegis.com/api/admin/security/audit-logs?ipAddress=192.168.1.100&isSuccessful=false"
+```
+
+#### GET `/api/admin/security/audit-logs/{id}`
+Pobiera pojedynczy audit log po ID.
+
+**Response:** `SecurityAuditLogDto` lub 404
+
+#### GET `/api/admin/security/audit-logs/user/{userId}`
+Pobiera audit logs dla konkretnego użytkownika.
+
+**Query Parameters:**
+- `pageNumber`, `pageSize`, `from`, `to`
+
+**Response:** `PagedResult<SecurityAuditLogDto>`
+
+#### GET `/api/admin/security/statistics`
+Pobiera statystyki audit logs dla dashboardu.
+
+**Query Parameters:**
+- `from` (datetime?) - od kiedy
+- `to` (datetime?) - do kiedy
+- `topUsersLimit` (int, default: 10, max: 50) - liczba top użytkowników
+- `topIpsLimit` (int, default: 10, max: 50) - liczba top IP addresses
+
+**Response:** `AuditLogStatisticsDto`
+```json
+{
+  "totalEvents": 15430,
+  "totalFailures": 245,
+  "criticalEvents": 12,
+  "highSeverityEvents": 58,
+  "eventTypeCounts": {
+    "LoginSuccess": 8500,
+    "LoginFailed": 145,
+    "MessageSent": 5200,
+    "PasswordChanged": 23
+  },
+  "severityCounts": {
+    "Info": 13500,
+    "Low": 1200,
+    "Medium": 660,
+    "High": 58,
+    "Critical": 12
+  },
+  "topActiveUsers": [
+    {
+      "userId": "abc123...",
+      "username": "john.doe",
+      "eventCount": 1250,
+      "failureCount": 5
+    }
+  ],
+  "topIpAddresses": [
+    {
+      "ipAddress": "192.168.1.100",
+      "eventCount": 850,
+      "failureCount": 2
+    }
+  ],
+  "oldestEvent": "2025-01-01T00:00:00Z",
+  "newestEvent": "2025-11-16T14:30:00Z"
+}
+```
+
+**Przykład dashboardu:**
+```typescript
+// React/TypeScript example
+const DashboardStats = () => {
+  const { data: stats } = useQuery('security-stats', () =>
+    fetch('/api/admin/security/statistics?from=2025-11-01').then(r => r.json())
+  );
+
+  return (
+    <div>
+      <StatCard title="Total Events" value={stats.totalEvents} />
+      <StatCard title="Failures" value={stats.totalFailures} color="red" />
+      <StatCard title="Critical" value={stats.criticalEvents} color="red" />
+
+      <Chart data={stats.eventTypeCounts} />
+      <TopUsersTable users={stats.topActiveUsers} />
+      <TopIpsTable ips={stats.topIpAddresses} />
+    </div>
+  );
+};
+```
+
+#### GET `/api/admin/security/audit-logs/export`
+Eksportuje audit logs do CSV.
+
+**Query Parameters:** te same co `/audit-logs` (bez paginacji)
+
+**Response:** Plik CSV (max 10,000 rekordów)
+
+**Przykład użycia:**
+```bash
+# Export wszystkich failed logins z ostatniego miesiąca
+curl -H "Authorization: Bearer {token}" \
+  "https://api.aegis.com/api/admin/security/audit-logs/export?isSuccessful=false&from=2025-10-16" \
+  -o audit-logs.csv
+```
+
+**Format CSV:**
+```csv
+Id,Timestamp,EventType,Severity,IsSuccessful,UserId,Username,IpAddress,...
+"abc123...","2025-11-16 14:30:00","LoginFailed","High","False","user123","john.doe","192.168.1.100",...
+```
+
+**CQRS Architecture:**
+API używa MediatR i CQRS pattern:
+- `GetAuditLogsQuery` - paginated list z filtrowaniem
+- `GetAuditLogByIdQuery` - single log
+- `GetUserAuditLogsQuery` - user-specific logs
+- `GetAuditLogStatisticsQuery` - dashboard statistics
+
+**Query Handlers:**
+- `GetAuditLogsQueryHandler` - zaawansowane filtrowanie i sortowanie
+- `GetAuditLogByIdQueryHandler` - single record retrieval
+- `GetUserAuditLogsQueryHandler` - user activity history
+- `GetAuditLogStatisticsQueryHandler` - aggregated statistics
+
+**Performance:**
+- Pagination: max 200 items per page
+- Export: max 10,000 records
+- Statistics: agregacja w pamięci (używaj `from`/`to` dla dużych datasetów)
+- Indeksy: Timestamp, UserId, EventType, Severity (już skonfigurowane)
+
+### 7. Helper Extensions
 
 **HttpContextSecurityExtensions** - łatwy dostęp do informacji o requestcie:
 
@@ -295,7 +609,7 @@ public class MessagesController : ControllerBase
 }
 ```
 
-### 6. Queries - Przeglądanie Audit Logs
+### 8. Queries - Przeglądanie Audit Logs (Programmatic)
 
 **ISecurityAuditRepository** zapewnia wydajne queries:
 
