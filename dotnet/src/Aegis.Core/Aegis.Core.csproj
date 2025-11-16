@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Authors>Aegis Messenger Team</Authors>
+    <Description>Core library for Aegis Messenger - Signal Protocol implementation and cryptography</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Signal Protocol & Cryptography -->
+    <PackageReference Include="libsignal-protocol-dotnet" Version="2.3.3" />
+    <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
+
+    <!-- JSON Serialization -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+
+    <!-- Dependency Injection -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+
+    <!-- Security -->
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>
