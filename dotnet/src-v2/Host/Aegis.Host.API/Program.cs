@@ -1,5 +1,8 @@
 using Aegis.Modules.Auth.API;
 using Aegis.Modules.Messages.API;
+using Aegis.Modules.Users.API;
+using Aegis.Modules.Groups.API;
+using Aegis.Modules.Files.API;
 using Aegis.Shared.Infrastructure;
 using Serilog;
 
@@ -74,6 +77,9 @@ try
     // Modules
     builder.Services.AddAuthModule(builder.Configuration);
     builder.Services.AddMessagesModule(builder.Configuration);
+    builder.Services.AddUsersModule(builder.Configuration);
+    builder.Services.AddGroupsModule(builder.Configuration);
+    builder.Services.AddFilesModule(builder.Configuration);
 
     // Health Checks
     builder.Services.AddHealthChecks();

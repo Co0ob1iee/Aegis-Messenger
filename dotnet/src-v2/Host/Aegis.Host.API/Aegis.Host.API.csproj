@@ -21,6 +21,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Modules\Auth\Aegis.Modules.Auth.API\Aegis.Modules.Auth.API.csproj" />
     <ProjectReference Include="..\..\Modules\Messages\Aegis.Modules.Messages.API\Aegis.Modules.Messages.API.csproj" />
+    <ProjectReference Include="..\..\Modules\Users\Aegis.Modules.Users.API\Aegis.Modules.Users.API.csproj" />
+    <ProjectReference Include="..\..\Modules\Groups\Aegis.Modules.Groups.API\Aegis.Modules.Groups.API.csproj" />
+    <ProjectReference Include="..\..\Modules\Files\Aegis.Modules.Files.API\Aegis.Modules.Files.API.csproj" />
     <ProjectReference Include="..\..\Shared\Aegis.Shared.Infrastructure\Aegis.Shared.Infrastructure.csproj" />
   </ItemGroup>
 
