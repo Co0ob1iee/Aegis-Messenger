@@ -4,7 +4,11 @@ Kompletny moduł bezpieczeństwa dla Aegis Messenger, zapewniający:
 - **Security Audit Logging** - kompletny audit trail wszystkich zdarzeń
 - **Rate Limiting** - ochrona przed abuse i brute force (in-memory + Redis distributed)
 - **Email/Webhook Alerting** - automatyczne powiadomienia dla Critical events
-- **Windows DPAPI Key Storage** - bezpieczne przechowywanie kluczy
+- **Platform-Specific Key Storage** - bezpieczne przechowywanie kluczy
+  - Windows: DPAPI (Data Protection API)
+  - Android: Android KeyStore System (hardware-backed)
+  - Linux: będzie dodany (KeyRing/libsecret)
+  - Fallback: In-Memory (development only)
 - **Automatic Middleware** - automatyczne logowanie i rate limiting dla HTTP requests
 - **Domain Event Handlers** - automatyczne logowanie domain events
 
@@ -774,6 +778,239 @@ public class AuditLogCleanupService : BackgroundService
             // Czekaj 24h
             await Task.Delay(TimeSpan.FromDays(1), stoppingToken);
         }
+    }
+}
+```
+
+## Platform-Specific Key Storage
+
+### Overview
+
+Aegis Messenger używa platform-specific secure storage dla kluczy kryptograficznych:
+- **Windows**: DPAPI (Data Protection API)
+- **Android**: Android KeyStore System (hardware-backed when available)
+- **Linux**: (w przygotowaniu) Linux KeyRing / libsecret
+- **Fallback**: In-Memory (tylko development)
+
+### Windows DPAPI
+
+**Lokalizacja**: `Shared/Aegis.Shared.Cryptography/Storage/WindowsDpapiKeyStore.cs`
+
+**Features:**
+- Encryption at rest używając Windows Data Protection API
+- Protected with user credentials (CurrentUser scope)
+- Keys can only be decrypted by the same Windows user
+- Secure deletion z 3-pass overwrite (DoD 5220.22-M)
+- User isolation - każdy user ma własny katalog
+
+**Storage Path**: `%LOCALAPPDATA%\AegisMessenger\Keys\{userId}\`
+
+**Bezpieczeństwo:**
+- ✅ DPAPI używa user master key z Windows Credential Manager
+- ✅ Additional entropy layer
+- ✅ Filesystem permissions (tylko current user)
+- ⚠️ Software-based (nie hardware-backed)
+- ⚠️ Vulnerabilities: admin access, memory dumps
+
+**Przykład użycia:**
+```csharp
+var keyStore = new WindowsDpapiKeyStore(logger);
+
+// Store key
+await keyStore.StoreKeyAsync("signal-identity", identityKey, userId);
+
+// Retrieve key
+var key = await keyStore.RetrieveKeyAsync("signal-identity", userId);
+
+// Delete key (secure 3-pass wipe)
+await keyStore.DeleteKeyAsync("signal-identity", userId);
+
+// Delete all keys for user
+await keyStore.DeleteAllKeysAsync(userId);
+```
+
+### Android KeyStore
+
+**Lokalizacja**: `Shared/Aegis.Shared.Cryptography/Storage/AndroidKeyStore.cs`
+
+**Features:**
+- **Hardware-backed** when available (TEE/StrongBox)
+- Master keys stored in Android KeyStore System
+- Biometric authentication support (production implementation)
+- Keys never leave secure hardware
+- User isolation - każdy user ma własny katalog
+
+**Storage Path**: `{AppDataDirectory}/keys/{userId}/`
+
+**Bezpieczeństwo:**
+- ✅ Hardware-backed on most devices (ARM TrustZone)
+- ✅ **StrongBox** support on Android 9+ flagship devices
+- ✅ Biometric authentication (production)
+- ✅ Key attestation - verify hardware backing
+- ✅ Keys invalidated on factory reset
+- ⚠️ Current implementation: simplified demo
+- ⚠️ Production: use AndroidX.Security.Crypto
+
+**Current Implementation (Demo):**
+```csharp
+// SIMPLIFIED VERSION - for cross-platform development
+var keyStore = new AndroidKeyStore(logger);
+await keyStore.StoreKeyAsync("signal-identity", identityKey, userId);
+```
+
+**Production Implementation:**
+
+See `ANDROID_KEYSTORE_PRODUCTION.md` for complete guide.
+
+Recommended approach with AndroidX Security:
+```csharp
+using AndroidX.Security.Crypto;
+
+public class ProductionAndroidKeyStore : IKeyStore
+{
+    private readonly MasterKey _masterKey;
+
+    public ProductionAndroidKeyStore(Context context)
+    {
+        // Create master key in Android KeyStore
+        _masterKey = new MasterKey.Builder(context)
+            .SetKeyScheme(MasterKey.KeyScheme.Aes256Gcm)
+            .SetUserAuthenticationRequired(true, 30)  // Biometric auth, 30s validity
+            .Build();
+    }
+
+    public async Task StoreKeyAsync(string keyId, byte[] key, Guid userId)
+    {
+        var file = new Java.IO.File(context.FilesDir, GetFileName(keyId, userId));
+
+        var encryptedFile = new EncryptedFile.Builder(
+            context,
+            file,
+            _masterKey,
+            EncryptedFile.FileEncryptionScheme.Aes256GcmHkdfTStream
+        ).Build();
+
+        using var output = encryptedFile.OpenFileOutput();
+        await output.WriteAsync(key);
+    }
+}
+```
+
+**Hardware Features:**
+- **TEE (Trusted Execution Environment)**: ARM TrustZone - isolated CPU mode
+- **StrongBox**: Dedicated security chip (Pixel 3+, Samsung S9+)
+- **Biometric Protection**: Fingerprint, Face, Iris unlock
+- **Key Attestation**: Cryptographic proof of hardware backing
+
+**Check hardware support:**
+```csharp
+var keyInfo = GetKeyInfo(alias);
+bool isHardwareBacked = keyInfo.IsInsideSecureHardware;
+bool isStrongBox = keyInfo.SecurityLevel == SecurityLevel.StrongBox;
+```
+
+### In-Memory KeyStore (Development Only)
+
+**Lokalizacja**: `Shared/Aegis.Shared.Cryptography/Storage/InMemoryKeyStore.cs`
+
+**⚠️ WARNING**: Only for development/testing!
+
+**Features:**
+- Thread-safe ConcurrentDictionary
+- User isolation z key prefix: `{userId}:{keyId}`
+- ❌ Keys lost on app restart
+- ❌ No encryption at rest
+- ❌ Vulnerable to memory dumps
+
+**Przykład użycia:**
+```csharp
+// ONLY for development
+services.AddSingleton<IKeyStore, InMemoryKeyStore>();
+```
+
+### Linux KeyRing (Coming Soon - ZADANIE 5)
+
+Będzie używał:
+- **libsecret** (GNOME Keyring)
+- **KWallet** (KDE)
+- **Secret Service API** (freedesktop.org standard)
+
+### Wybór Implementacji
+
+**Automatic platform detection:**
+```csharp
+services.AddSingleton<IKeyStore>(sp =>
+{
+    var logger = sp.GetRequiredService<ILogger<IKeyStore>>();
+
+    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+    {
+        return new WindowsDpapiKeyStore(logger);
+    }
+    else if (OperatingSystem.IsAndroid())
+    {
+        // Production: use ProductionAndroidKeyStore
+        return new AndroidKeyStore(logger);
+    }
+    else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+    {
+        // TODO: return new LinuxKeyRingStore(logger);
+        throw new PlatformNotSupportedException("Linux KeyRing not yet implemented");
+    }
+    else
+    {
+        // Fallback for development
+        logger.LogWarning("Using InMemoryKeyStore - NOT SECURE FOR PRODUCTION");
+        return new InMemoryKeyStore();
+    }
+});
+```
+
+### Security Comparison
+
+| Feature | Windows DPAPI | Android KeyStore | Linux KeyRing | In-Memory |
+|---------|--------------|------------------|---------------|-----------|
+| Encryption at rest | ✅ | ✅ | ✅ | ❌ |
+| Hardware-backed | ❌ | ✅ (most devices) | ⚠️ (depends) | ❌ |
+| Biometric auth | ❌ | ✅ | ⚠️ (depends) | ❌ |
+| Survives restart | ✅ | ✅ | ✅ | ❌ |
+| User isolation | ✅ | ✅ | ✅ | ✅ |
+| Secure deletion | ✅ | ✅ | ⚠️ | N/A |
+| Production ready | ✅ | ⚠️ (use AndroidX) | ❌ (coming soon) | ❌ |
+
+### Best Practices
+
+1. **Always use platform-specific storage in production**
+2. **Enable biometric authentication on Android** for sensitive keys
+3. **Test on multiple devices** - hardware support varies
+4. **Implement key recovery mechanism** - users can lose biometric access
+5. **Rotate keys periodically** - even hardware-backed keys should be rotated
+6. **Monitor key access** - log to security audit when keys are accessed
+7. **Handle key loss gracefully** - app reinstall, device migration
+
+### Migration
+
+When changing KeyStore implementation:
+```csharp
+public class MigratingKeyStore : IKeyStore
+{
+    public async Task<byte[]?> RetrieveKeyAsync(string keyId, Guid userId)
+    {
+        // Try new storage first
+        var key = await _newKeyStore.RetrieveKeyAsync(keyId, userId);
+        if (key != null) return key;
+
+        // Fallback to old storage
+        key = await _oldKeyStore.RetrieveKeyAsync(keyId, userId);
+        if (key != null)
+        {
+            // Migrate to new storage
+            await _newKeyStore.StoreKeyAsync(keyId, key, userId);
+            await _oldKeyStore.DeleteKeyAsync(keyId, userId);
+            _logger.LogInformation("Migrated key {KeyId} to new storage", keyId);
+        }
+
+        return key;
     }
 }
 ```
