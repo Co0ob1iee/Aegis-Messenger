@@ -1,4 +1,5 @@
 using Aegis.Modules.Auth.API;
+using Aegis.Modules.Messages.API;
 using Aegis.Shared.Infrastructure;
 using Serilog;
 
@@ -55,14 +56,15 @@ try
         });
     });
 
-    // CORS
+    // CORS (SignalR requires credentials)
     builder.Services.AddCors(options =>
     {
         options.AddDefaultPolicy(policy =>
         {
-            policy.AllowAnyOrigin()
+            policy.WithOrigins("http://localhost:3000", "https://localhost:5001")
                   .AllowAnyMethod()
-                  .AllowAnyHeader();
+                  .AllowAnyHeader()
+                  .AllowCredentials();
         });
     });
 
@@ -71,6 +73,7 @@ try
 
     // Modules
     builder.Services.AddAuthModule(builder.Configuration);
+    builder.Services.AddMessagesModule(builder.Configuration);
 
     // Health Checks
     builder.Services.AddHealthChecks();
@@ -94,6 +97,9 @@ try
 
     app.MapControllers();
     app.MapHealthChecks("/health");
+
+    // SignalR Hubs
+    app.MapMessagesHub();
 
     Log.Information("Aegis Messenger API started successfully");
     app.Run();
