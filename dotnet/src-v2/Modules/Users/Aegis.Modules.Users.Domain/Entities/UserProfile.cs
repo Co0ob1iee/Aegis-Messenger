@@ -1,6 +1,7 @@
 using Aegis.Modules.Users.Domain.Enums;
 using Aegis.Shared.Kernel.Primitives;
 using Aegis.Shared.Kernel.Results;
+using Aegis.Shared.Kernel.ValueObjects;
 
 namespace Aegis.Modules.Users.Domain.Entities;
 
@@ -20,6 +21,9 @@ public class UserProfile : AggregateRoot<Guid>
     public DateTime? LastSeenAt { get; private set; }
     public bool ShowOnlineStatus { get; private set; }
 
+    // Privacy settings
+    public PrivacySettings PrivacySettings { get; private set; }
+
     public IReadOnlyList<Guid> ContactIds => _contactIds.AsReadOnly();
     public IReadOnlyList<Guid> BlockedUserIds => _blockedUserIds.AsReadOnly();
 
@@ -31,6 +35,7 @@ public class UserProfile : AggregateRoot<Guid>
         Id = userId;
         Status = OnlineStatus.Offline;
         ShowOnlineStatus = true;
+        PrivacySettings = PrivacySettings.CreateDefault();  // Balanced privacy by default
     }
 
     /// <summary>
@@ -184,4 +189,49 @@ public class UserProfile : AggregateRoot<Guid>
     /// Check if user is contact
     /// </summary>
     public bool IsContact(Guid userId) => _contactIds.Contains(userId);
+
+    /// <summary>
+    /// Update privacy settings
+    /// </summary>
+    public Result UpdatePrivacySettings(PrivacySettings newSettings)
+    {
+        PrivacySettings = newSettings;
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Check if requester can see online status based on privacy settings
+    /// </summary>
+    public bool CanSeeOnlineStatus(Guid requesterId)
+    {
+        var isContact = _contactIds.Contains(requesterId);
+        return PrivacySettings.CanSee(PrivacySettings.OnlineStatusVisibility, isContact);
+    }
+
+    /// <summary>
+    /// Check if requester can see last seen based on privacy settings
+    /// </summary>
+    public bool CanSeeLastSeen(Guid requesterId)
+    {
+        var isContact = _contactIds.Contains(requesterId);
+        return PrivacySettings.CanSee(PrivacySettings.LastSeenVisibility, isContact);
+    }
+
+    /// <summary>
+    /// Check if requester can see profile picture based on privacy settings
+    /// </summary>
+    public bool CanSeeProfilePicture(Guid requesterId)
+    {
+        var isContact = _contactIds.Contains(requesterId);
+        return PrivacySettings.CanSee(PrivacySettings.ProfilePictureVisibility, isContact);
+    }
+
+    /// <summary>
+    /// Check if requester can see bio based on privacy settings
+    /// </summary>
+    public bool CanSeeBio(Guid requesterId)
+    {
+        var isContact = _contactIds.Contains(requesterId);
+        return PrivacySettings.CanSee(PrivacySettings.BioVisibility, isContact);
+    }
 }

@@ -47,6 +47,9 @@ public static class DependencyInjection
         // Encryption service
         services.AddScoped<IEncryptionService, SignalProtocolEncryptionService>();
 
+        // Background services
+        services.AddHostedService<MessageExpirationService>();
+
         return services;
     }
 }

@@ -65,12 +65,20 @@ public class MessageConfiguration : IEntityTypeConfiguration<Message>
         builder.Property(m => m.IsDeleted)
             .IsRequired();
 
+        // Disappearing messages
+        builder.Property(m => m.DisappearDuration);
+
+        builder.Property(m => m.DisappearsAt);
+
+        builder.Ignore(m => m.IsExpired);
+
         // Indexes
         builder.HasIndex(m => m.ConversationId);
         builder.HasIndex(m => m.SenderId);
         builder.HasIndex(m => m.RecipientId);
         builder.HasIndex(m => new { m.RecipientId, m.Status });
         builder.HasIndex(m => m.SentAt);
+        builder.HasIndex(m => m.DisappearsAt);  // For efficient expiration queries
 
         // Ignore domain events
         builder.Ignore(m => m.DomainEvents);
