@@ -19,6 +19,8 @@
 - [Uruchomienie](#uruchomienie)
 - [API Documentation](#api-documentation)
 - [Technologie](#technologie)
+- [Development & Contributing](#development--contributing)
+- [Security](#security)
 
 ---
 
@@ -511,6 +513,89 @@ dotnet test tests/Aegis.Backend.Tests/
 
 ---
 
+## 🚀 Development & Contributing
+
+### 📖 Dokumentacja Rozwoju
+
+- **[Development Roadmap](DEVELOPMENT_ROADMAP.md)** - Szczegółowy plan rozwoju projektu
+  - Fazy rozwoju (1-4)
+  - Nowe funkcjonalności (Disappearing messages, Voice/Video calls, etc.)
+  - Roadmap na 4-5 miesięcy
+  - Metryki sukcesu
+
+- **[Contributing Guidelines](CONTRIBUTING.md)** - Jak kontrybuować do projektu
+  - Code of Conduct
+  - Coding standards i style guide
+  - Testing requirements
+  - Pull request process
+  - Git commit message conventions
+
+### 🤝 Jak Zacząć Kontrybuować?
+
+```bash
+# 1. Fork repozytorium
+# 2. Clone swojego forka
+git clone https://github.com/YOUR_USERNAME/Aegis-Messenger.git
+
+# 3. Utwórz branch dla feature
+git checkout -b feature/amazing-feature
+
+# 4. Commit zmiany
+git commit -m "feat: add amazing feature"
+
+# 5. Push do forka
+git push origin feature/amazing-feature
+
+# 6. Otwórz Pull Request
+```
+
+Więcej informacji: [CONTRIBUTING.md](CONTRIBUTING.md)
+
+---
+
+## 🔒 Security
+
+### 🛡️ Security Audit
+
+**[Pełny Security Audit dostępny tutaj: SECURITY_AUDIT.md](SECURITY_AUDIT.md)**
+
+#### Podsumowanie Obecnego Stanu
+
+| Severity | Count | Status |
+|----------|-------|--------|
+| 🔴 **CRITICAL** | 4 | ⚠️ Wymaga natychmiastowej akcji |
+| 🟠 **HIGH** | 7 | ⚠️ Fix w ciągu tygodnia |
+| 🟡 **MEDIUM** | 8 | 📋 Fix w ciągu miesiąca |
+| 🟢 **LOW** | 4 | ✅ Fix gdy będzie czas |
+
+#### Krytyczne Problemy do Naprawy
+
+1. **CRIT-001:** In-memory storage kluczy Signal Protocol
+2. **CRIT-002:** Hardcoded JWT secret key
+3. **CRIT-003:** Brak szyfrowania sesji w bazie danych
+4. **HIGH-001:** Brak rate limiting (DoS vulnerability)
+
+### 🐛 Zgłaszanie Luk Bezpieczeństwa
+
+**NIE twórz publicznego issue dla luk bezpieczeństwa!**
+
+Zamiast tego:
+- Email: security@aegismessenger.com (private)
+- Użyj [GitHub Security Advisories](https://github.com/Co0ob1iee/Aegis-Messenger/security/advisories)
+
+Otrzymasz odpowiedź w ciągu 48 godzin.
+
+### 🔐 Security Best Practices
+
+Podczas rozwoju:
+- ✅ **ZAWSZE** używaj User Secrets dla development
+- ✅ **ZAWSZE** waliduj input od użytkownika
+- ✅ **NIGDY** nie commituj secretów
+- ✅ **ZAWSZE** używaj parameterized queries
+- ✅ Śledź [Security Checklist](CONTRIBUTING.md#security-checklist)
+
+---
+
 ## 📝 Licencja
 
 Ten projekt jest portem edukacyjnym oryginalnej aplikacji Aegis Messenger.
@@ -521,6 +606,7 @@ Ten projekt jest portem edukacyjnym oryginalnej aplikacji Aegis Messenger.
 
 Dla pytań technicznych lub wsparcia:
 - GitHub Issues: [Create Issue](https://github.com/Co0ob1iee/Aegis-Messenger/issues)
+- Security: security@aegismessenger.com (private)
 
 ---
 
