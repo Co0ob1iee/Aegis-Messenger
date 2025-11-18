@@ -1,0 +1,139 @@
+<Page
+    x:Class="Aegis.Desktop.Views.PrivacySettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Aegis.Desktop.Controls"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <ScrollViewer>
+        <StackPanel Padding="24" Spacing="24" MaxWidth="800">
+            <!-- Header -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="Privacy Settings"
+                          FontSize="32"
+                          FontWeight="Bold"/>
+                <TextBlock Text="Control your privacy and security settings for this conversation."
+                          FontSize="14"
+                          Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                          TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <!-- Disappearing Messages Section -->
+            <StackPanel Spacing="16"
+                       Padding="16"
+                       Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                       BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                       BorderThickness="1"
+                       CornerRadius="8">
+                <StackPanel Spacing="4">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE916;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}"/>
+                        <TextBlock Text="Disappearing Messages"
+                                  FontSize="18"
+                                  FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <TextBlock Text="Messages will be deleted automatically after being read."
+                              Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                              TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <controls:DisappearingMessagesControl x:Name="DisappearingMessagesControl"/>
+            </StackPanel>
+
+            <!-- Sealed Sender Section -->
+            <StackPanel Spacing="16"
+                       Padding="16"
+                       Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                       BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                       BorderThickness="1"
+                       CornerRadius="8">
+                <StackPanel Spacing="4">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE72E;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}"/>
+                        <TextBlock Text="Sealed Sender"
+                                  FontSize="18"
+                                  FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <TextBlock Text="Hide your identity from the server when sending messages. Only the recipient can see who sent the message."
+                              Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                              TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <ToggleSwitch Header="Enable Sealed Sender"
+                             IsOn="{x:Bind ViewModel.SealedSenderEnabled, Mode=TwoWay}"
+                             OnContent="Enabled"
+                             OffContent="Disabled"/>
+
+                <InfoBar IsOpen="True"
+                        Severity="Informational"
+                        IsClosable="False"
+                        Message="When enabled, the server cannot see who sends messages, providing maximum sender anonymity."/>
+            </StackPanel>
+
+            <!-- Typing Indicators Section -->
+            <StackPanel Spacing="16"
+                       Padding="16"
+                       Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                       BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                       BorderThickness="1"
+                       CornerRadius="8">
+                <StackPanel Spacing="4">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE8BD;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}"/>
+                        <TextBlock Text="Typing Indicators"
+                                  FontSize="18"
+                                  FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <TextBlock Text="Let others know when you're typing a message."
+                              Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                              TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <ToggleSwitch Header="Show Typing Indicators"
+                             IsOn="{x:Bind ViewModel.TypingIndicatorsEnabled, Mode=TwoWay}"
+                             OnContent="Enabled"
+                             OffContent="Disabled"/>
+            </StackPanel>
+
+            <!-- Read Receipts Section -->
+            <StackPanel Spacing="16"
+                       Padding="16"
+                       Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                       BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                       BorderThickness="1"
+                       CornerRadius="8">
+                <StackPanel Spacing="4">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE8FB;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}"/>
+                        <TextBlock Text="Read Receipts"
+                                  FontSize="18"
+                                  FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <TextBlock Text="Let others know when you've read their messages."
+                              Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                              TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <ToggleSwitch Header="Send Read Receipts"
+                             IsOn="{x:Bind ViewModel.ReadReceiptsEnabled, Mode=TwoWay}"
+                             OnContent="Enabled"
+                             OffContent="Disabled"/>
+
+                <InfoBar IsOpen="True"
+                        Severity="Warning"
+                        IsClosable="False"
+                        Message="If you disable read receipts, you won't be able to see when others read your messages."/>
+            </StackPanel>
+
+            <!-- Save Button -->
+            <Button Content="Save Privacy Settings"
+                   Command="{x:Bind ViewModel.SaveCommand}"
+                   Style="{ThemeResource AccentButtonStyle}"
+                   HorizontalAlignment="Right"
+                   Padding="32,8"/>
+        </StackPanel>
+    </ScrollViewer>
+</Page>
