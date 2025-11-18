@@ -1,0 +1,30 @@
+<Page
+    x:Class="Aegis.Clients.Desktop.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid>
+        <NavigationView
+            x:Name="SettingsNavView"
+            IsBackButtonVisible="Collapsed"
+            IsSettingsVisible="False"
+            PaneDisplayMode="Left"
+            SelectionChanged="SettingsNavView_SelectionChanged">
+
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="Privacy" Icon="ProtectedDocument" Tag="privacy"/>
+                <NavigationViewItem Content="Notifications" Icon="Ringer" Tag="notifications"/>
+                <NavigationViewItem Content="Account" Icon="Contact" Tag="account"/>
+                <NavigationViewItem Content="Appearance" Icon="Color" Tag="appearance"/>
+                <NavigationViewItem Content="Storage" Icon="Folder" Tag="storage"/>
+                <NavigationViewItem Content="About" Icon="Info" Tag="about"/>
+            </NavigationView.MenuItems>
+
+            <Frame x:Name="SettingsContentFrame"/>
+
+        </NavigationView>
+    </Grid>
+</Page>

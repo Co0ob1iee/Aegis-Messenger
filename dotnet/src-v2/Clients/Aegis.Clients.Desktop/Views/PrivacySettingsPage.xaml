@@ -1,0 +1,355 @@
+<Page
+    x:Class="Aegis.Clients.Desktop.Views.PrivacySettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer>
+        <StackPanel Spacing="24" Padding="40,24,40,40" MaxWidth="800">
+
+            <!-- Header -->
+            <StackPanel Spacing="8">
+                <TextBlock
+                    Text="Privacy Settings"
+                    Style="{StaticResource TitleTextBlockStyle}"/>
+                <TextBlock
+                    Text="Control how your messages and metadata are protected"
+                    Style="{StaticResource BodyTextBlockStyle}"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+            </StackPanel>
+
+            <!-- Message Privacy Section -->
+            <StackPanel Spacing="16">
+                <TextBlock
+                    Text="Message Privacy"
+                    Style="{StaticResource SubtitleTextBlockStyle}"/>
+
+                <!-- Message Padding -->
+                <StackPanel
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
+                            <TextBlock
+                                Text="Message Padding"
+                                Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                            <TextBlock
+                                Text="Add random padding to hide message length from traffic analysis"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <ToggleSwitch
+                            Grid.Row="0" Grid.Column="1"
+                            IsOn="{x:Bind ViewModel.IsMessagePaddingEnabled, Mode=TwoWay}"
+                            OffContent="" OnContent=""/>
+
+                        <!-- Padding options (only visible when enabled) -->
+                        <StackPanel
+                            Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                            Margin="0,12,0,0"
+                            Spacing="12"
+                            Visibility="{x:Bind ViewModel.IsMessagePaddingEnabled, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+
+                            <TextBlock
+                                Text="Padding Strategy"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+
+                            <ComboBox
+                                SelectedIndex="{x:Bind ViewModel.PaddingStrategyIndex, Mode=TwoWay}"
+                                HorizontalAlignment="Stretch">
+                                <ComboBoxItem Content="Random (0-512 bytes)"/>
+                                <ComboBoxItem Content="Fixed Block (256 bytes)"/>
+                                <ComboBoxItem Content="Exponential (power of 2)"/>
+                            </ComboBox>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+
+                <!-- Timestamp Fuzzing -->
+                <StackPanel
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
+                            <TextBlock
+                                Text="Timestamp Fuzzing"
+                                Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                            <TextBlock
+                                Text="Add random delays to message timestamps to prevent timing analysis"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <ToggleSwitch
+                            Grid.Row="0" Grid.Column="1"
+                            IsOn="{x:Bind ViewModel.IsTimestampFuzzingEnabled, Mode=TwoWay}"
+                            OffContent="" OnContent=""/>
+
+                        <!-- Fuzzing range (only visible when enabled) -->
+                        <StackPanel
+                            Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                            Margin="0,12,0,0"
+                            Spacing="12"
+                            Visibility="{x:Bind ViewModel.IsTimestampFuzzingEnabled, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+
+                            <TextBlock Style="{StaticResource CaptionTextBlockStyle}">
+                                <Run Text="Fuzzing Range: "/>
+                                <Run Text="{x:Bind ViewModel.TimestampFuzzingRangeSeconds, Mode=OneWay}"/>
+                                <Run Text=" seconds"/>
+                            </TextBlock>
+
+                            <Slider
+                                Minimum="1"
+                                Maximum="300"
+                                StepFrequency="1"
+                                Value="{x:Bind ViewModel.TimestampFuzzingRangeSeconds, Mode=TwoWay}"
+                                Header="Random delay range (1-300 seconds)"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+
+                <!-- Sealed Sender -->
+                <StackPanel
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Spacing="4">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock
+                                    Text="Sealed Sender"
+                                    Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                                <Border
+                                    Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                    CornerRadius="4"
+                                    Padding="6,2">
+                                    <TextBlock
+                                        Text="NEW"
+                                        Style="{StaticResource CaptionTextBlockStyle}"
+                                        Foreground="White"
+                                        FontWeight="SemiBold"/>
+                                </Border>
+                            </StackPanel>
+                            <TextBlock
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap">
+                                <Run Text="Hide your identity from the server when sending messages."/>
+                                <LineBreak/>
+                                <Run Text="Server will only see the recipient, not the sender."
+                                     FontStyle="Italic"/>
+                            </TextBlock>
+                        </StackPanel>
+
+                        <ToggleSwitch
+                            Grid.Column="1"
+                            IsOn="{x:Bind ViewModel.IsSealedSenderEnabled, Mode=TwoWay}"
+                            OffContent="" OnContent=""/>
+                    </Grid>
+                </StackPanel>
+
+            </StackPanel>
+
+            <!-- Message Retention Section -->
+            <StackPanel Spacing="16">
+                <TextBlock
+                    Text="Message Retention"
+                    Style="{StaticResource SubtitleTextBlockStyle}"/>
+
+                <!-- Disappearing Messages -->
+                <StackPanel
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
+                            <TextBlock
+                                Text="Disappearing Messages (Default)"
+                                Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                            <TextBlock
+                                Text="Automatically delete messages after a specified time"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <ToggleSwitch
+                            Grid.Row="0" Grid.Column="1"
+                            IsOn="{x:Bind ViewModel.IsDisappearingMessagesEnabled, Mode=TwoWay}"
+                            OffContent="" OnContent=""/>
+
+                        <!-- Timer options (only visible when enabled) -->
+                        <StackPanel
+                            Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                            Margin="0,12,0,0"
+                            Spacing="12"
+                            Visibility="{x:Bind ViewModel.IsDisappearingMessagesEnabled, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+
+                            <TextBlock
+                                Text="Default Timer"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+
+                            <ComboBox
+                                SelectedIndex="{x:Bind ViewModel.DisappearingMessageTimerIndex, Mode=TwoWay}"
+                                HorizontalAlignment="Stretch">
+                                <ComboBoxItem Content="30 seconds"/>
+                                <ComboBoxItem Content="1 minute"/>
+                                <ComboBoxItem Content="5 minutes"/>
+                                <ComboBoxItem Content="30 minutes"/>
+                                <ComboBoxItem Content="1 hour"/>
+                                <ComboBoxItem Content="6 hours"/>
+                                <ComboBoxItem Content="12 hours"/>
+                                <ComboBoxItem Content="24 hours"/>
+                                <ComboBoxItem Content="1 week"/>
+                            </ComboBox>
+
+                            <InfoBar
+                                IsOpen="True"
+                                Severity="Informational"
+                                IsClosable="False"
+                                Message="This is the default setting for new conversations. You can customize it per conversation."/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Metadata Privacy Section -->
+            <StackPanel Spacing="16">
+                <TextBlock
+                    Text="Metadata Privacy"
+                    Style="{StaticResource SubtitleTextBlockStyle}"/>
+
+                <!-- Read Receipts -->
+                <StackPanel
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Spacing="4">
+                            <TextBlock
+                                Text="Read Receipts"
+                                Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                            <TextBlock
+                                Text="Send read receipts when you open messages"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <ToggleSwitch
+                            Grid.Column="1"
+                            IsOn="{x:Bind ViewModel.AreReadReceiptsEnabled, Mode=TwoWay}"
+                            OffContent="" OnContent=""/>
+                    </Grid>
+                </StackPanel>
+
+                <!-- Typing Indicators -->
+                <StackPanel
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Spacing="4">
+                            <TextBlock
+                                Text="Typing Indicators"
+                                Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                            <TextBlock
+                                Text="Show when you're typing to others"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <ToggleSwitch
+                            Grid.Column="1"
+                            IsOn="{x:Bind ViewModel.AreTypingIndicatorsEnabled, Mode=TwoWay}"
+                            OffContent="" OnContent=""/>
+                    </Grid>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Privacy Info -->
+            <InfoBar
+                IsOpen="True"
+                Severity="Informational"
+                Title="End-to-End Encryption"
+                IsClosable="False">
+                <InfoBar.Message>
+                    All messages are end-to-end encrypted using the Signal Protocol.
+                    These settings provide additional privacy protection against metadata analysis and traffic correlation.
+                </InfoBar.Message>
+            </InfoBar>
+
+            <!-- Save Button -->
+            <Button
+                Content="Save Settings"
+                Style="{StaticResource AccentButtonStyle}"
+                HorizontalAlignment="Right"
+                Command="{x:Bind ViewModel.SaveCommand}"/>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>

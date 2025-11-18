@@ -1,0 +1,28 @@
+<Window
+    x:Class="Aegis.Clients.Desktop.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid>
+        <NavigationView
+            x:Name="NavView"
+            IsBackButtonVisible="Collapsed"
+            IsSettingsVisible="True"
+            PaneDisplayMode="Left"
+            SelectionChanged="NavView_SelectionChanged"
+            SettingsInvoked="NavView_SettingsInvoked">
+
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="Conversations" Icon="Message" Tag="conversations"/>
+                <NavigationViewItem Content="Contacts" Icon="Contact" Tag="contacts"/>
+                <NavigationViewItem Content="Groups" Icon="People" Tag="groups"/>
+            </NavigationView.MenuItems>
+
+            <Frame x:Name="ContentFrame"/>
+
+        </NavigationView>
+    </Grid>
+</Window>

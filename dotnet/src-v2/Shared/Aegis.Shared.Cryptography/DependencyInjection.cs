@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using Aegis.Shared.Cryptography.Interfaces;
+using Aegis.Shared.Cryptography.SealedSender;
 using Aegis.Shared.Cryptography.Services;
 using Aegis.Shared.Cryptography.SignalProtocol;
 using Aegis.Shared.Cryptography.Storage;
@@ -24,6 +25,11 @@ public static class DependencyInjection
 
         // Signal Protocol services
         services.AddSingleton<ISignalProtocol, SignalProtocolService>();
+
+        // Sealed Sender services (anonymous sender messaging)
+        services.AddSingleton<ISenderCertificateService, SenderCertificateService>();
+        services.AddSingleton<ISealedSenderService, SealedSenderService>();
+        services.AddSingleton<SealedSenderFallbackService>();
 
         // Privacy protection services
         services.AddSingleton<IMessagePaddingService, MessagePaddingService>();
